@@ -24,7 +24,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const { loginWithGoogleCredential, isAuthenticated } = useAuth();
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '584144894892-c88g30fub8t38n8732h7o2v0t81q6u7h.apps.googleusercontent.com';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '584144894892-c88ge009ojt19cq52ucka1jjbcda099l.apps.googleusercontent.com';
 
   useEffect(() => {
     if (isAuthenticated) {
