@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { UserSettings } from './types';
 import { StorageService } from './services/storage';
 import { SeoService } from './services/seo';
-import { AuthProvider } from './auth/AuthContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { DesktopSideAd, TopAd, BottomAd } from './components/AdBanners';
@@ -20,7 +19,7 @@ import { AccessibilityPage } from './pages/AccessibilityPage';
 import { ContactPage } from './pages/ContactPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
-export const AppContent: React.FC = () => {
+export const App: React.FC = () => {
   const [currentPath, setCurrentPath] = useState<string>(() => {
     return window.location.pathname || '/';
   });
@@ -123,14 +122,6 @@ export const AppContent: React.FC = () => {
       {/* GDPR Consent Banner */}
       <ConsentBanner onNavigate={handleNavigate} />
     </div>
-  );
-};
-
-export const App: React.FC = () => {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
   );
 };
 

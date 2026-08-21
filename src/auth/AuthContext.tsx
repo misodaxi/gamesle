@@ -1,14 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { SupabaseService, getSupabaseClient } from '../services/supabase';
+
+export interface UserStats {
+  gamesPlayed: number;
+  currentStreak: number;
+  maxStreak: number;
+}
 
 export interface UserProfile {
   id: string;
   name: string;
-  email: string;
-  picture: string;
+  email?: string;
+  picture?: string;
   isGuest: boolean;
   createdAt: string;
+  stats: UserStats;
 }
 
 interface GoogleJwtPayload {
@@ -19,30 +25,49 @@ interface GoogleJwtPayload {
 }
 
 interface AuthContextType {
-  user: UserProfile;
-  loginWithGoogleCredential: (credential: string) => void;
-  loginWithSupabaseOAuth: () => Promise<void>;
-  logout: () => void;
+  profile: UserProfile;
   isAuthenticated: boolean;
-  getGameLaunchUrl: (targetUrl: string) => string;
+  isGuest: boolean;
+  loginWithGoogleCredential: (credential: string) => Promise<boolean>;
+  logout: () => void;
+  deleteAccount: () => void;
+  updateProfileName: (name: string) => void;
+  getGameLaunchUrl: (targetUrl?: string) => string;
 }
 
 const AUTH_STORAGE_KEY = 'gamesle_user_profile_v1';
 
-const defaultGuestUser: UserProfile = {
-  id: 'guest',
-  name: 'Invitado',
-  email: '',
-  picture: '',
+export const INITIAL_USER_STATS: UserStats = {
+  gamesPlayed: 0,
+  currentStreak: 0,
+  maxStreak: 0
+};
+
+const defaultGuestProfile: UserProfile = {
+  id: 'guest_' + Math.random().toString(36).substring(2, 9),
+  name: 'Jugador Invitado',
   isGuest: true,
-  createdAt: new Date().toISOString()
+  createdAt: new Date().toISOString(),
+  stats: { ...INITIAL_USER_STATS }
+};
+
+export const resolveTargetUrl = (targetUrl: string = 'https://namele.onrender.com'): string => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    if (targetUrl.includes('namele.onrender.com')) {
+      return 'http://localhost:3001';
+    }
+    if (targetUrl.includes('gamesle.onrender.com')) {
+      return 'http://localhost:3000';
+    }
+  }
+  return targetUrl;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile>(() => {
-    // 1. Check URL parameters for cross-domain SSO handshake (?auth_sync=...)
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [profile, setProfile] = useState<UserProfile>(() => {
+    // 1. Check URL parameters for cross-domain SSO handshake from Namele (?auth_sync=...)
     try {
       if (typeof window !== 'undefined' && window.location.search) {
         const params = new URLSearchParams(window.location.search);
@@ -50,27 +75,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (syncPayload) {
           const parsed = JSON.parse(decodeURIComponent(syncPayload));
           if (parsed && parsed.id && !parsed.isGuest) {
-            const syncedUser: UserProfile = {
-              id: parsed.id,
-              name: parsed.name || 'Jugador Gamesle',
+            const synced: UserProfile = {
+              id: parsed.id.startsWith('google_') ? parsed.id : `google_${parsed.id}`,
+              isGuest: false,
+              name: parsed.name || 'Jugador Google',
               email: parsed.email || '',
               picture: parsed.picture || '',
-              isGuest: false,
-              createdAt: parsed.createdAt || new Date().toISOString()
+              createdAt: parsed.createdAt || new Date().toISOString(),
+              stats: parsed.stats || { ...INITIAL_USER_STATS }
             };
-            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(syncedUser));
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(synced));
             params.delete('auth_sync');
             const newSearch = params.toString() ? `?${params.toString()}` : '';
             window.history.replaceState({}, '', `${window.location.pathname}${newSearch}`);
-            return syncedUser;
+            return synced;
           }
         }
       }
     } catch (e) {
-      console.warn('Error reading SSO sync payload:', e);
+      console.warn('Error syncing profile from URL handshake in Gamesle:', e);
     }
 
-    // 2. Fallback to localStorage
+    // 2. Load from localStorage
     try {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
@@ -79,102 +105,113 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.warn('Unable to load user profile from storage:', e);
     }
-    return defaultGuestUser;
+    return defaultGuestProfile;
   });
 
-  // Listen to Supabase OAuth callback session changes
   useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-
-    // Check if session exists in Supabase (e.g. after returning from OAuth callback)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        const profile = SupabaseService.mapSupabaseUserToProfile(session.user);
-        setUser(profile);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const profile = SupabaseService.mapSupabaseUserToProfile(session.user);
-        setUser(profile);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!user.isGuest) {
-      SupabaseService.syncUserProfile(user);
-    }
-  }, [user]);
-
-  const loginWithGoogleCredential = (credential: string) => {
     try {
-      const decoded = jwtDecode<GoogleJwtPayload>(credential);
-      const newUser: UserProfile = {
-        id: decoded.sub,
-        name: decoded.name || 'Jugador Gamesle',
-        email: decoded.email || '',
-        picture: decoded.picture || '',
-        isGuest: false,
-        createdAt: user.isGuest ? new Date().toISOString() : user.createdAt
-      };
-
-      setUser(newUser);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
-      SupabaseService.syncUserProfile(newUser);
-    } catch (err) {
-      console.error('Error decoding Google credential:', err);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+    } catch (e) {
+      console.warn('Failed to save profile:', e);
     }
-  };
+  }, [profile]);
 
-  const loginWithSupabaseOAuth = async () => {
-    await SupabaseService.signInWithGoogle(window.location.origin);
+  const loginWithGoogleCredential = async (credential: string): Promise<boolean> => {
+    try {
+      const decoded: GoogleJwtPayload = jwtDecode(credential);
+      if (!decoded.sub) return false;
+
+      setProfile((prev) => {
+        const updatedProfile: UserProfile = {
+          id: `google_${decoded.sub}`,
+          isGuest: false,
+          name: decoded.name || 'Jugador Google',
+          email: decoded.email,
+          picture: decoded.picture,
+          createdAt: prev.createdAt,
+          stats: prev.stats
+        };
+
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedProfile));
+        return updatedProfile;
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error logging in with Google credential:', err);
+      return false;
+    }
   };
 
   const logout = () => {
-    const supabase = getSupabaseClient();
-    if (supabase) {
-      supabase.auth.signOut().catch(() => {});
-    }
-    setUser(defaultGuestUser);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    const newGuest: UserProfile = {
+      id: 'guest_' + Math.random().toString(36).substring(2, 9),
+      isGuest: true,
+      name: 'Jugador Invitado',
+      createdAt: new Date().toISOString(),
+      stats: { ...INITIAL_USER_STATS }
+    };
+    setProfile(newGuest);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newGuest));
   };
 
-  const getGameLaunchUrl = (targetUrl: string): string => {
-    if (user.isGuest) return targetUrl;
+  const deleteAccount = () => {
     try {
-      const url = new URL(targetUrl);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (e) {
+      console.warn('Failed to clear data:', e);
+    }
+    const cleanGuest: UserProfile = {
+      id: 'guest_' + Math.random().toString(36).substring(2, 9),
+      isGuest: true,
+      name: 'Jugador Invitado',
+      createdAt: new Date().toISOString(),
+      stats: { ...INITIAL_USER_STATS }
+    };
+    setProfile(cleanGuest);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(cleanGuest));
+  };
+
+  const updateProfileName = (name: string) => {
+    if (!name.trim()) return;
+    setProfile((prev) => {
+      const updated = { ...prev, name: name.trim() };
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const getGameLaunchUrl = (targetUrl: string = 'https://namele.onrender.com'): string => {
+    const resolvedUrl = resolveTargetUrl(targetUrl);
+    if (profile.isGuest) return resolvedUrl;
+    try {
+      const url = new URL(resolvedUrl);
       const syncData = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        picture: user.picture,
+        id: profile.id.replace('google_', ''),
+        name: profile.name,
+        email: profile.email,
+        picture: profile.picture,
         isGuest: false,
-        createdAt: user.createdAt
+        createdAt: profile.createdAt,
+        stats: profile.stats
       };
       url.searchParams.set('auth_sync', encodeURIComponent(JSON.stringify(syncData)));
       return url.toString();
     } catch {
-      return `${targetUrl}?auth_sync=${encodeURIComponent(JSON.stringify(user))}`;
+      return `${resolvedUrl}?auth_sync=${encodeURIComponent(JSON.stringify(profile))}`;
     }
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        profile,
+        isAuthenticated: !profile.isGuest,
+        isGuest: profile.isGuest,
         loginWithGoogleCredential,
-        loginWithSupabaseOAuth,
         logout,
-        isAuthenticated: !user.isGuest,
+        deleteAccount,
+        updateProfileName,
         getGameLaunchUrl
       }}
     >

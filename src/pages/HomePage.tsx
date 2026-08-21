@@ -28,7 +28,7 @@ const ASSOCIATED_GAMES: GameItem[] = [
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const { getGameLaunchUrl } = useAuth();
-  const nameleUrl = getGameLaunchUrl('https://namele.onrender.com');
+  const nameleLaunchUrl = getGameLaunchUrl('https://namele.onrender.com');
 
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -78,7 +78,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a
-              href={nameleUrl}
+              href={nameleLaunchUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary"

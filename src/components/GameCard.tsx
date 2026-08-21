@@ -1,12 +1,16 @@
 import React from 'react';
 import { Play, Globe2, Sparkles, ArrowRight } from 'lucide-react';
 import { GameItem } from '../types';
+import { useAuth } from '../auth/AuthContext';
 
 interface GameCardProps {
   game: GameItem;
 }
 
 export const GameCard: React.FC<GameCardProps> = ({ game }) => {
+  const { getGameLaunchUrl } = useAuth();
+  const launchUrl = getGameLaunchUrl(game.url);
+
   return (
     <article className="game-card" aria-label={`Ficha del juego ${game.title}`}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
@@ -80,7 +84,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
         <a
-          href={game.url}
+          href={launchUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary"

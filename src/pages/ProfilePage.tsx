@@ -1,167 +1,243 @@
-import React from 'react';
-import { User, LogOut, ShieldCheck, Gamepad2, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, LogOut, Trash2, Edit2, Check, ArrowLeft, Gamepad2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
-interface ProfilePageProps {
-  onNavigate: (path: string) => void;
-}
+export const ProfilePage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
+  const { profile, isAuthenticated, isGuest, logout, deleteAccount, updateProfileName, getGameLaunchUrl } = useAuth();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState(profile.name);
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
-  const { user, logout, isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return (
-      <article
-        className="content-section"
-        style={{
-          width: '100%',
-          maxWidth: 520,
-          margin: '20px auto',
-          textAlign: 'center',
-          padding: '36px 24px'
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: '50%',
-            backgroundColor: 'var(--brand-soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px auto'
-          }}
-        >
-          <User size={26} color="var(--brand-primary)" />
-        </div>
-
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: 8 }}>
-          Perfil de Jugador
-        </h1>
-
-        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: 24 }}>
-          Actualmente estás navegando en modo invitado. Inicia sesión con tu cuenta de Google para guardar tu progreso unificado.
-        </p>
-
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() => onNavigate('/login')}
-          style={{ margin: '0 auto' }}
-        >
-          Iniciar Sesión con Google
-        </button>
-      </article>
-    );
-  }
+  const handleSaveName = () => {
+    if (editNameValue.trim()) {
+      updateProfileName(editNameValue.trim());
+      setIsEditingName(false);
+    }
+  };
 
   return (
-    <article
-      className="content-section"
-      style={{
-        width: '100%',
-        maxWidth: 620,
-        margin: '20px auto',
-        padding: '32px 24px'
-      }}
-    >
-      <header style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 20 }}>
-        {user.picture ? (
+    <div className="center-column" style={{ maxWidth: 640 }}>
+      {/* Top Header Actions */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 20 }}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => onNavigate('/')}
+          style={{ width: 'auto', padding: '6px 14px' }}
+        >
+          <ArrowLeft size={16} /> Volver a Portada
+        </button>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={logout}
+              style={{ width: 'auto', padding: '6px 12px', fontSize: '0.85rem' }}
+            >
+              <LogOut size={14} /> Cerrar Sesión
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => onNavigate('/login')}
+              style={{ width: 'auto', padding: '6px 14px', fontSize: '0.85rem' }}
+            >
+              Iniciar Sesión con Google
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => {
+              if (confirm('¿Estás seguro de borrar todos tus datos locales de Gamesle?')) {
+                deleteAccount();
+                onNavigate('/');
+              }
+            }}
+            title="Borrar datos locales"
+            aria-label="Borrar datos locales"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* User Header Profile Card */}
+      <div
+        style={{
+          width: '100%',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 24,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          boxShadow: 'var(--shadow-sm)',
+          marginBottom: 24
+        }}
+      >
+        {profile.picture ? (
           <img
-            src={user.picture}
-            alt={user.name}
-            style={{ width: 64, height: 64, borderRadius: '50%', border: '2px solid var(--brand-primary)' }}
+            src={profile.picture}
+            alt={profile.name}
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              border: '3px solid var(--brand-primary)',
+              marginBottom: 12
+            }}
           />
         ) : (
           <div
             style={{
-              width: 64,
-              height: 64,
+              width: 72,
+              height: 72,
               borderRadius: '50%',
               backgroundColor: 'var(--brand-soft)',
+              color: 'var(--brand-primary)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              marginBottom: 12
             }}
           >
-            <User size={30} color="var(--brand-primary)" />
+            <User size={36} />
           </div>
         )}
 
-        <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{user.name}</h1>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{user.email}</p>
+        {isEditingName ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <input
+              type="text"
+              value={editNameValue}
+              onChange={(e) => setEditNameValue(e.target.value)}
+              style={{
+                fontSize: '1.2rem',
+                fontWeight: 700,
+                textAlign: 'center',
+                padding: '4px 8px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--brand-primary)',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)'
+              }}
+              autoFocus
+            />
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={handleSaveName}
+              title="Guardar nombre"
+            >
+              <Check size={16} />
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{profile.name}</h1>
+            <button
+              type="button"
+              onClick={() => setIsEditingName(true)}
+              style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+              title="Editar nombre"
+            >
+              <Edit2 size={14} />
+            </button>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
           <span
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              fontSize: '0.72rem',
+              fontSize: '0.75rem',
               fontWeight: 700,
-              color: 'var(--success-primary)',
-              backgroundColor: 'var(--success-soft)',
-              padding: '2px 8px',
+              padding: '3px 10px',
               borderRadius: 'var(--radius-full)',
-              marginTop: 4
+              backgroundColor: isGuest ? 'var(--bg-primary)' : 'var(--success-soft)',
+              color: isGuest ? 'var(--text-secondary)' : 'var(--success-text)'
             }}
           >
-            <ShieldCheck size={12} /> Cuenta Google Conectada
+            {isGuest ? 'Cuenta de Invitado' : 'Cuenta Verificada Google'}
           </span>
+          {profile.email && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {profile.email}
+            </span>
+          )}
         </div>
-      </header>
 
-      {/* Associated Games Section */}
-      <section style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Gamepad2 size={18} color="var(--brand-primary)" /> Juegos Asociados a tu Cuenta
-        </h2>
-
-        <div
-          style={{
-            padding: 16,
-            backgroundColor: 'var(--bg-secondary)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12
-          }}
-        >
-          <div>
-            <strong style={{ fontSize: '0.95rem' }}>Namele</strong>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Deducción Geográfica en Mapa Mundial • Reto Diario Activo
-            </p>
-          </div>
-
-          <a
-            href="https://namele.onrender.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: 36 }}
+        {/* Guest Migration CTA */}
+        {isGuest && (
+          <div
+            style={{
+              marginTop: 16,
+              padding: '12px 16px',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--brand-soft)',
+              color: 'var(--brand-text)',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8
+            }}
           >
-            Jugar <ArrowRight size={14} />
-          </a>
-        </div>
-      </section>
-
-      {/* Logout Action */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => {
-            logout();
-            onNavigate('/');
-          }}
-          style={{ color: 'var(--danger-primary)' }}
-        >
-          <LogOut size={16} /> Cerrar Sesión
-        </button>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+              ¿Quieres registrar tu cuenta oficial y sincronizar tus rachas?
+            </span>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => onNavigate('/login')}
+              style={{ maxWidth: 240, padding: '8px 16px', fontSize: '0.88rem' }}
+            >
+              Iniciar sesión con Google
+            </button>
+          </div>
+        )}
       </div>
-    </article>
+
+      {/* Associated Games Hub */}
+      <h2 style={{ fontSize: '1.15rem', marginBottom: 12, alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Gamepad2 size={18} color="var(--brand-primary)" /> Juegos Asociados y Disponibles
+      </h2>
+
+      <div
+        style={{
+          width: '100%',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-md)',
+          padding: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12
+        }}
+      >
+        <div>
+          <strong style={{ fontSize: '0.95rem' }}>Namele</strong>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
+            Deducción Geográfica en Mapa Mundial • Reto Diario Sincronizado
+          </p>
+        </div>
+
+        <a
+          href={getGameLaunchUrl('https://namele.onrender.com')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary"
+          style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: 36 }}
+        >
+          Jugar <ArrowRight size={14} />
+        </a>
+      </div>
+    </div>
   );
 };
