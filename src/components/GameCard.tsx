@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Globe2, Sparkles, ArrowRight } from 'lucide-react';
+import { Play, Globe2, Newspaper, Sparkles, ArrowRight } from 'lucide-react';
 import { GameItem } from '../types';
 import { useAuth } from '../auth/AuthContext';
 
@@ -11,6 +11,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
   const { getGameLaunchUrl } = useAuth();
   const launchUrl = getGameLaunchUrl(game.url);
 
+  const isNewsle = game.id === 'newsle' || game.iconName === 'newspaper';
+
   return (
     <article className="game-card" aria-label={`Ficha del juego ${game.title}`}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
@@ -20,13 +22,17 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
               width: 44,
               height: 44,
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--brand-soft)',
+              backgroundColor: isNewsle ? 'rgba(79, 70, 229, 0.15)' : 'var(--brand-soft)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}
           >
-            <Globe2 size={22} color="var(--brand-primary)" />
+            {isNewsle ? (
+              <Newspaper size={22} color="#6366F1" />
+            ) : (
+              <Globe2 size={22} color="var(--brand-primary)" />
+            )}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -75,7 +81,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4, margin: '4px 0' }}>
           {game.features.map((feat, idx) => (
             <li key={idx} style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: 'var(--brand-primary)' }} />
+              <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: isNewsle ? '#6366F1' : 'var(--brand-primary)' }} />
               {feat}
             </li>
           ))}

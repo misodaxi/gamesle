@@ -562,3 +562,21 @@ body {
     padding: 20px;
   }
 }
+
+/* Google Translate Silent Integration */
+#google_translate_element,
+.goog-te-banner-frame,
+.skiptranslate {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}

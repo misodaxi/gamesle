@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
 export interface UserStats {
@@ -59,6 +59,9 @@ export const resolveTargetUrl = (targetUrl: string = 'https://namele.onrender.co
     if (targetUrl.includes('gamesle.onrender.com')) {
       return 'http://localhost:3000';
     }
+    if (targetUrl.includes('newsle.onrender.com')) {
+      return 'http://localhost:3002';
+    }
   }
   return targetUrl;
 };
@@ -67,7 +70,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
-    // 1. Check URL parameters for cross-domain SSO handshake from Namele (?auth_sync=...)
     try {
       if (typeof window !== 'undefined' && window.location.search) {
         const params = new URLSearchParams(window.location.search);
@@ -75,35 +77,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (syncPayload) {
           const parsed = JSON.parse(decodeURIComponent(syncPayload));
           if (parsed && parsed.id && !parsed.isGuest) {
-            const synced: UserProfile = {
+            const syncedProfile: UserProfile = {
               id: parsed.id.startsWith('google_') ? parsed.id : `google_${parsed.id}`,
               isGuest: false,
               name: parsed.name || 'Jugador Google',
               email: parsed.email || '',
               picture: parsed.picture || '',
               createdAt: parsed.createdAt || new Date().toISOString(),
-              stats: parsed.stats || { ...INITIAL_USER_STATS }
+              stats: { ...INITIAL_USER_STATS }
             };
-            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(synced));
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(syncedProfile));
             params.delete('auth_sync');
             const newSearch = params.toString() ? `?${params.toString()}` : '';
             window.history.replaceState({}, '', `${window.location.pathname}${newSearch}`);
-            return synced;
+            return syncedProfile;
           }
         }
       }
-    } catch (e) {
-      console.warn('Error syncing profile from URL handshake in Gamesle:', e);
-    }
 
-    // 2. Load from localStorage
-    try {
-      const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
       }
     } catch (e) {
-      console.warn('Unable to load user profile from storage:', e);
+      console.warn('Error reading stored profile:', e);
     }
     return defaultGuestProfile;
   });
@@ -112,7 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
     } catch (e) {
-      console.warn('Failed to save profile:', e);
+      console.warn('Error saving profile:', e);
     }
   }, [profile]);
 
@@ -122,7 +119,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!decoded.sub) return false;
 
       setProfile((prev) => {
-        const updatedProfile: UserProfile = {
+        const updated: UserProfile = {
           id: `google_${decoded.sub}`,
           isGuest: false,
           name: decoded.name || 'Jugador Google',
@@ -131,42 +128,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           createdAt: prev.createdAt,
           stats: prev.stats
         };
-
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedProfile));
-        return updatedProfile;
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
       });
 
       return true;
     } catch (err) {
-      console.error('Error logging in with Google credential:', err);
+      console.error('Failed to decode Google JWT:', err);
       return false;
     }
   };
 
   const logout = () => {
     const newGuest: UserProfile = {
+      ...defaultGuestProfile,
       id: 'guest_' + Math.random().toString(36).substring(2, 9),
-      isGuest: true,
-      name: 'Jugador Invitado',
-      createdAt: new Date().toISOString(),
-      stats: { ...INITIAL_USER_STATS }
+      createdAt: new Date().toISOString()
     };
     setProfile(newGuest);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newGuest));
   };
 
   const deleteAccount = () => {
-    try {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-    } catch (e) {
-      console.warn('Failed to clear data:', e);
-    }
+    localStorage.removeItem(AUTH_STORAGE_KEY);
     const cleanGuest: UserProfile = {
+      ...defaultGuestProfile,
       id: 'guest_' + Math.random().toString(36).substring(2, 9),
-      isGuest: true,
-      name: 'Jugador Invitado',
-      createdAt: new Date().toISOString(),
-      stats: { ...INITIAL_USER_STATS }
+      createdAt: new Date().toISOString()
     };
     setProfile(cleanGuest);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(cleanGuest));
@@ -192,8 +180,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: profile.email,
         picture: profile.picture,
         isGuest: false,
-        createdAt: profile.createdAt,
-        stats: profile.stats
+        createdAt: profile.createdAt
       };
       url.searchParams.set('auth_sync', encodeURIComponent(JSON.stringify(syncData)));
       return url.toString();
