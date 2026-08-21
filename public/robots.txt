@@ -1,0 +1,6 @@
+# Robots.txt for Gamesle Gaming Hub
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://gamesle.onrender.com/sitemap.xml

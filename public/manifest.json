@@ -1,0 +1,16 @@
+{
+  "name": "Namele",
+  "short_name": "Namele",
+  "description": "El desafío diario de deducción de nombres y países",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111315",
+  "theme_color": "#5B5CE2",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
