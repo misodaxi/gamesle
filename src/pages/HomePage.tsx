@@ -3,6 +3,7 @@ import { Play, Sparkles, Globe2, ShieldCheck, Gamepad2, HelpCircle, Trophy, Flam
 import { CountdownBadge } from '../components/CountdownBadge';
 import { GameCard } from '../components/GameCard';
 import { GameItem } from '../types';
+import { useAuth } from '../auth/AuthContext';
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -26,6 +27,9 @@ const ASSOCIATED_GAMES: GameItem[] = [
 ];
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
+  const { getGameLaunchUrl } = useAuth();
+  const nameleUrl = getGameLaunchUrl('https://namele.onrender.com');
+
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Spain Midnight Countdown */}
@@ -74,7 +78,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <a
-              href="https://namele.onrender.com"
+              href={nameleUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary"

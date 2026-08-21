@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { SupabaseService } from '../services/supabase';
 
@@ -23,6 +23,7 @@ interface AuthContextType {
   loginWithGoogleCredential: (credential: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  getGameLaunchUrl: (targetUrl: string) => string;
 }
 
 const AUTH_STORAGE_KEY = 'gamesle_user_profile_v1';
@@ -40,6 +41,36 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
+    // 1. Check URL parameters for cross-domain SSO handshake (?auth_sync=...)
+    try {
+      if (typeof window !== 'undefined' && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const syncPayload = params.get('auth_sync');
+        if (syncPayload) {
+          const parsed = JSON.parse(decodeURIComponent(syncPayload));
+          if (parsed && parsed.id && !parsed.isGuest) {
+            const syncedUser: UserProfile = {
+              id: parsed.id,
+              name: parsed.name || 'Jugador Gamesle',
+              email: parsed.email || '',
+              picture: parsed.picture || '',
+              isGuest: false,
+              createdAt: parsed.createdAt || new Date().toISOString()
+            };
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(syncedUser));
+            // Clean URL param without page reload
+            params.delete('auth_sync');
+            const newSearch = params.toString() ? `?${params.toString()}` : '';
+            window.history.replaceState({}, '', `${window.location.pathname}${newSearch}`);
+            return syncedUser;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading SSO sync payload:', e);
+    }
+
+    // 2. Fallback to localStorage
     try {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
@@ -50,6 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return defaultGuestUser;
   });
+
+  useEffect(() => {
+    if (!user.isGuest) {
+      SupabaseService.syncUserProfile(user);
+    }
+  }, [user]);
 
   const loginWithGoogleCredential = (credential: string) => {
     try {
@@ -76,13 +113,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(AUTH_STORAGE_KEY);
   };
 
+  const getGameLaunchUrl = (targetUrl: string): string => {
+    if (user.isGuest) return targetUrl;
+    try {
+      const url = new URL(targetUrl);
+      const syncData = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        isGuest: false,
+        createdAt: user.createdAt
+      };
+      url.searchParams.set('auth_sync', encodeURIComponent(JSON.stringify(syncData)));
+      return url.toString();
+    } catch {
+      return `${targetUrl}?auth_sync=${encodeURIComponent(JSON.stringify(user))}`;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loginWithGoogleCredential,
         logout,
-        isAuthenticated: !user.isGuest
+        isAuthenticated: !user.isGuest,
+        getGameLaunchUrl
       }}
     >
       {children}
