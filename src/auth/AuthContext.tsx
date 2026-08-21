@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { SupabaseService } from '../services/supabase';
+import { SupabaseService, getSupabaseClient } from '../services/supabase';
 
 export interface UserProfile {
   id: string;
@@ -21,6 +21,7 @@ interface GoogleJwtPayload {
 interface AuthContextType {
   user: UserProfile;
   loginWithGoogleCredential: (credential: string) => void;
+  loginWithSupabaseOAuth: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   getGameLaunchUrl: (targetUrl: string) => string;
@@ -58,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               createdAt: parsed.createdAt || new Date().toISOString()
             };
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(syncedUser));
-            // Clean URL param without page reload
             params.delete('auth_sync');
             const newSearch = params.toString() ? `?${params.toString()}` : '';
             window.history.replaceState({}, '', `${window.location.pathname}${newSearch}`);
@@ -81,6 +81,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return defaultGuestUser;
   });
+
+  // Listen to Supabase OAuth callback session changes
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    // Check if session exists in Supabase (e.g. after returning from OAuth callback)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const profile = SupabaseService.mapSupabaseUserToProfile(session.user);
+        setUser(profile);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const profile = SupabaseService.mapSupabaseUserToProfile(session.user);
+        setUser(profile);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (!user.isGuest) {
@@ -108,7 +135,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithSupabaseOAuth = async () => {
+    await SupabaseService.signInWithGoogle(window.location.origin);
+  };
+
   const logout = () => {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      supabase.auth.signOut().catch(() => {});
+    }
     setUser(defaultGuestUser);
     localStorage.removeItem(AUTH_STORAGE_KEY);
   };
@@ -137,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         loginWithGoogleCredential,
+        loginWithSupabaseOAuth,
         logout,
         isAuthenticated: !user.isGuest,
         getGameLaunchUrl

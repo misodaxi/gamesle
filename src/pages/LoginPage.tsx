@@ -21,7 +21,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
-  const { loginWithGoogleCredential, isAuthenticated } = useAuth();
+  const { loginWithGoogleCredential, loginWithSupabaseOAuth, isAuthenticated } = useAuth();
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '584144894892-c88ge009ojt19cq52ucka1jjbcda099l.apps.googleusercontent.com';
@@ -91,15 +91,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         Conecta tu cuenta de Google para guardar tus rachas unificadas, estadísticas y acceder a los juegos asociados del ecosistema Gamesle.
       </p>
 
-      {/* Google Sign In Button Container */}
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+      {/* Google Sign In Options */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, margin: '20px 0' }}>
+        {/* Google Identity Services Button */}
         <div ref={googleBtnRef} style={{ minHeight: 44 }} />
+
+        {/* Direct Supabase OAuth Button */}
+        <button
+          type="button"
+          onClick={() => loginWithSupabaseOAuth()}
+          className="btn-primary"
+          style={{ width: '100%', maxWidth: 280, fontSize: '0.9rem' }}
+        >
+          <LogIn size={16} /> Entrar con Google (Supabase)
+        </button>
       </div>
 
       <div
         style={{
           padding: 14,
-          backgroundColor: 'var(--bg-secondary)',
+          backgroundColor: 'var(--bg-primary)',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-subtle)',
           fontSize: '0.8rem',
@@ -112,7 +123,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         }}
       >
         <ShieldCheck size={16} color="var(--success-primary)" />
-        <span>Autenticación 100% segura y privada mediante Google OAuth oficial</span>
+        <span>Autenticación 100% segura mediante Google OAuth y Supabase</span>
       </div>
 
       <button
