@@ -1,58 +1,117 @@
-/**
- * Gamesle Consent Manager (GDPR & ePrivacy Compliant)
- */
+export type ConsentChoice = 'all' | 'essential_only' | 'custom' | 'undecided';
 
-export interface ConsentSettings {
-  necessary: boolean;
+export interface ConsentPreferences {
+  status: ConsentChoice;
+  essential: boolean;
   analytics: boolean;
-  advertising: boolean;
-  timestamp: string;
-  version: string;
+  personalizedAds: boolean;
+  nonPersonalizedAds: boolean;
+  updatedAt: string | null;
 }
 
-const CONSENT_STORAGE_KEY = 'gamesle_user_consent_v1';
-const CURRENT_VERSION = '1.0';
+const CONSENT_STORAGE_KEY = 'gamesle_consent_preferences_v1';
+
+export const DEFAULT_CONSENT: ConsentPreferences = {
+  status: 'undecided',
+  essential: true,
+  analytics: false,
+  personalizedAds: false,
+  nonPersonalizedAds: false,
+  updatedAt: null
+};
+
+type ConsentListener = (prefs: ConsentPreferences) => void;
 
 export class ConsentManager {
-  public static getConsent(): ConsentSettings | null {
+  private static listeners: ConsentListener[] = [];
+
+  public static getConsent(): ConsentPreferences {
     try {
-      const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as ConsentSettings;
-      if (parsed.version !== CURRENT_VERSION) return null;
-      return parsed;
+      const data = localStorage.getItem(CONSENT_STORAGE_KEY);
+      if (data) {
+        return { ...DEFAULT_CONSENT, ...JSON.parse(data) };
+      }
     } catch {
-      return null;
+      // Ignore
     }
+    return DEFAULT_CONSENT;
   }
 
-  public static setConsent(settings: { analytics: boolean; advertising: boolean }): void {
-    const fullSettings: ConsentSettings = {
-      necessary: true,
-      analytics: settings.analytics,
-      advertising: settings.advertising,
-      timestamp: new Date().toISOString(),
-      version: CURRENT_VERSION
+  public static setConsent(prefs: ConsentPreferences): void {
+    const updated: ConsentPreferences = {
+      ...prefs,
+      essential: true,
+      updatedAt: new Date().toISOString()
     };
 
     try {
-      localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(fullSettings));
+      localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(updated));
     } catch (e) {
-      console.warn('Unable to persist consent settings:', e);
+      console.warn('Failed to save consent:', e);
     }
+
+    ConsentManager.notifyListeners(updated);
   }
 
-  public static canServeAds(): boolean {
-    const consent = this.getConsent();
-    if (!consent) return false;
-    return consent.advertising === true;
+  public static acceptAll(): void {
+    ConsentManager.setConsent({
+      status: 'all',
+      essential: true,
+      analytics: true,
+      personalizedAds: true,
+      nonPersonalizedAds: true,
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  public static rejectNonEssential(): void {
+    ConsentManager.setConsent({
+      status: 'essential_only',
+      essential: true,
+      analytics: false,
+      personalizedAds: false,
+      nonPersonalizedAds: true,
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  public static hasAnswered(): boolean {
+    const consent = ConsentManager.getConsent();
+    return consent.status !== 'undecided';
+  }
+
+  public static canServePersonalizedAds(): boolean {
+    const consent = ConsentManager.getConsent();
+    return consent.personalizedAds && consent.status === 'all';
+  }
+
+  public static canServeAnyAds(): boolean {
+    const consent = ConsentManager.getConsent();
+    return consent.status !== 'undecided';
   }
 
   public static resetConsent(): void {
     try {
       localStorage.removeItem(CONSENT_STORAGE_KEY);
     } catch (e) {
-      console.warn('Unable to reset consent:', e);
+      console.warn('Failed to reset consent:', e);
     }
+  }
+
+  public static subscribe(listener: ConsentListener): () => void {
+    ConsentManager.listeners.push(listener);
+    return () => {
+      ConsentManager.listeners = ConsentManager.listeners.filter((l) => l !== listener);
+    };
+  }
+
+  private static notifyListeners(prefs: ConsentPreferences): void {
+    ConsentManager.listeners.forEach((listener) => {
+      try {
+        listener(prefs);
+      } catch (e) {
+        console.error('Error in consent listener:', e);
+      }
+    });
   }
 }

@@ -1,163 +1,113 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Cookie, Settings, Check, X } from 'lucide-react';
-import { ConsentManager } from '../services/consent';
+import { Shield, Settings, Check, X } from 'lucide-react';
+import { ConsentManager, ConsentPreferences } from '../services/consent';
 
 interface ConsentBannerProps {
-  onNavigate?: (path: string) => void;
+  onNavigate: (path: string) => void;
 }
 
 export const ConsentBanner: React.FC<ConsentBannerProps> = ({ onNavigate }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [analytics, setAnalytics] = useState(true);
-  const [advertising, setAdvertising] = useState(true);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [customPrefs, setCustomPrefs] = useState<ConsentPreferences>(() => ConsentManager.getConsent());
 
   useEffect(() => {
-    const existing = ConsentManager.getConsent();
-    if (!existing) {
-      setIsVisible(true);
-    }
+    setIsVisible(!ConsentManager.hasAnswered());
   }, []);
 
   const handleAcceptAll = () => {
-    ConsentManager.setConsent({ analytics: true, advertising: true });
+    ConsentManager.acceptAll();
     setIsVisible(false);
-    setShowModal(false);
-    window.location.reload();
   };
 
   const handleRejectNonEssential = () => {
-    ConsentManager.setConsent({ analytics: false, advertising: false });
+    ConsentManager.rejectNonEssential();
     setIsVisible(false);
-    setShowModal(false);
-    window.location.reload();
   };
 
   const handleSaveCustom = () => {
-    ConsentManager.setConsent({ analytics, advertising });
-    setIsVisible(false);
+    ConsentManager.setConsent({
+      ...customPrefs,
+      status: 'custom'
+    });
     setShowModal(false);
-    window.location.reload();
+    setIsVisible(false);
   };
-
-  if (!isVisible && !showModal) {
-    return null;
-  }
 
   return (
     <>
-      {/* Banner Principal */}
+      {/* Fixed Bottom Notice Bar */}
       {isVisible && !showModal && (
         <aside
           role="region"
-          aria-label="Consentimiento de Cookies y Privacidad"
+          aria-label="Aviso de privacidad y consentimiento de cookies"
           style={{
             position: 'fixed',
-            bottom: 20,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 'calc(100% - 40px)',
-            maxWidth: 820,
+            bottom: 0,
+            left: 0,
+            right: 0,
             backgroundColor: 'var(--bg-card)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid var(--border-active)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '20px 24px',
-            boxShadow: 'var(--shadow-lg)',
-            zIndex: 9999,
+            borderTop: '2px solid var(--brand-primary)',
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.25)',
+            padding: '16px 20px',
+            zIndex: 10000,
             display: 'flex',
-            flexDirection: 'column',
-            gap: 16
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--brand-soft)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}
-            >
-              <Cookie size={22} color="var(--brand-primary)" />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 4 }}>
-                Tu privacidad y experiencia en Gamesle
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                En Gamesle utilizamos cookies técnicas necesarias para el funcionamiento del portal y el guardado de tus preferencias, y con tu consentimiento, cookies de análisis y publicidad contextual a través de Google AdSense.
-              </p>
-            </div>
-          </div>
-
           <div
             style={{
+              maxWidth: 1100,
+              width: '100%',
               display: 'flex',
-              flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 12,
-              borderTop: '1px solid var(--border-subtle)',
-              paddingTop: 14
+              gap: 16,
+              flexWrap: 'wrap'
             }}
           >
-            {onNavigate ? (
-              <button
-                type="button"
-                onClick={() => onNavigate('/privacy')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--brand-primary)',
-                  fontSize: '0.82rem',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                Leer Política de Privacidad y Cookies
-              </button>
-            ) : (
-              <a
-                href="/privacy"
-                style={{
-                  color: 'var(--brand-primary)',
-                  fontSize: '0.82rem',
-                  textDecoration: 'underline',
-                  fontWeight: 600
-                }}
-              >
-                Leer Política de Privacidad
-              </a>
-            )}
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '0.92rem', marginBottom: 4 }}>
+                <Shield size={18} color="var(--brand-primary)" />
+                Tu Privacidad en Gamesle
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
+                Utilizamos almacenamiento local y cookies técnicas para guardar tu sesión y preferencias. Si lo autorizas, también empleamos cookies para métricas y publicidad personalizada de Google AdSense acorde al RGPD. Consulta nuestra{' '}
+                <button
+                  type="button"
+                  onClick={() => onNavigate('/privacy')}
+                  style={{ textDecoration: 'underline', color: 'var(--brand-primary)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}
+                >
+                  Política de Privacidad
+                </button>.
+              </p>
+            </div>
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="btn-secondary"
                 onClick={() => setShowModal(true)}
-                style={{ fontSize: '0.82rem', padding: '8px 14px', minHeight: 38 }}
+                style={{ width: 'auto', padding: '8px 14px', fontSize: '0.82rem' }}
               >
-                <Settings size={14} /> Personalizar
+                <Settings size={14} /> Configurar
               </button>
+
               <button
                 type="button"
                 className="btn-secondary"
                 onClick={handleRejectNonEssential}
-                style={{ fontSize: '0.82rem', padding: '8px 14px', minHeight: 38 }}
+                style={{ width: 'auto', padding: '8px 14px', fontSize: '0.82rem' }}
               >
                 Solo Necesarias
               </button>
+
               <button
                 type="button"
                 className="btn-primary"
                 onClick={handleAcceptAll}
-                style={{ fontSize: '0.82rem', padding: '8px 16px', minHeight: 38 }}
+                style={{ width: 'auto', padding: '8px 18px', fontSize: '0.82rem' }}
               >
                 <Check size={14} /> Aceptar Todas
               </button>
@@ -166,144 +116,91 @@ export const ConsentBanner: React.FC<ConsentBannerProps> = ({ onNavigate }) => {
         </aside>
       )}
 
-      {/* Modal de Personalización */}
+      {/* Granular Preference Customization Modal */}
       {showModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Panel de Configuración de Consentimiento"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-            padding: 16
-          }}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 580,
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-xl)',
-              padding: 28,
-              boxShadow: 'var(--shadow-lg)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 20
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <ShieldCheck size={24} color="var(--brand-primary)" />
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Preferencias de Privacidad</h3>
-              </div>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setShowModal(false)}
-                aria-label="Cerrar modal de privacidad"
-              >
-                <X size={18} />
-              </button>
-            </div>
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="consent-modal-title">
+          <div className="modal-card" style={{ maxWidth: 520 }}>
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={() => setShowModal(false)}
+              aria-label="Cerrar modal de preferencias de cookies"
+            >
+              <X size={18} />
+            </button>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Cookies Necesarias */}
-              <div
-                style={{
-                  padding: 14,
-                  backgroundColor: 'var(--bg-secondary)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
+            <h2 id="consent-modal-title" style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Shield size={22} color="var(--brand-primary)" />
+              Configurar Preferencias de Privacidad
+            </h2>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 16 }}>
+              Selecciona qué categorías de cookies y almacenamiento deseas permitir durante tu navegación:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+              {/* Essential */}
+              <div style={{ backgroundColor: 'var(--bg-primary)', padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <strong style={{ fontSize: '0.9rem' }}>Cookies Técnicas Necesarias</strong>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Imprescindibles para el inicio de sesión, racha y preferencias de tema.
-                  </p>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>Técnicas y Esenciales (Obligatorias)</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Imprescindibles para recordar tu sesión, tema oscuro y preferencias de navegación.
+                  </div>
                 </div>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--success-primary)' }}>
-                  Siempre Activas
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--success-primary)', padding: '2px 8px', backgroundColor: 'var(--success-soft)', borderRadius: 'var(--radius-full)' }}>
+                  Siempre Activo
                 </span>
               </div>
 
-              {/* Cookies de Publicidad */}
-              <div
-                style={{
-                  padding: 14,
-                  backgroundColor: 'var(--bg-secondary)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
+              {/* Analytics */}
+              <div style={{ backgroundColor: 'var(--bg-primary)', padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <strong style={{ fontSize: '0.9rem' }}>Publicidad y Medición (Google AdSense)</strong>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Permiten financiar el mantenimiento y creación de nuevos juegos gratuitos.
-                  </p>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>Métricas y Rendimiento</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Nos ayuda a entender el volumen de jugadores y rendimiento de la plataforma de forma agregada.
+                  </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={advertising}
-                  onChange={(e) => setAdvertising(e.target.checked)}
-                  style={{ width: 20, height: 20, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
-                  aria-label="Permitir cookies de publicidad"
+                  checked={customPrefs.analytics}
+                  onChange={(e) => setCustomPrefs({ ...customPrefs, analytics: e.target.checked })}
+                  aria-label="Permitir métricas y rendimiento"
+                  style={{ width: 18, height: 18, cursor: 'pointer' }}
                 />
               </div>
 
-              {/* Cookies de Análisis */}
-              <div
-                style={{
-                  padding: 14,
-                  backgroundColor: 'var(--bg-secondary)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
+              {/* Personalized Ads */}
+              <div style={{ backgroundColor: 'var(--bg-primary)', padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <strong style={{ fontSize: '0.9rem' }}>Métricas y Rendimiento</strong>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Estadísticas agregadas anónimas sobre el rendimiento de los juegos.
-                  </p>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>Publicidad Personalizada (Google AdSense)</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Permite a Google mostrar anuncios basados en tus intereses previos. Si se desactiva, solo se mostrarán anuncios contextuales no personalizados.
+                  </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={analytics}
-                  onChange={(e) => setAnalytics(e.target.checked)}
-                  style={{ width: 20, height: 20, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
-                  aria-label="Permitir cookies de análisis"
+                  checked={customPrefs.personalizedAds}
+                  onChange={(e) => setCustomPrefs({ ...customPrefs, personalizedAds: e.target.checked, nonPersonalizedAds: true })}
+                  aria-label="Permitir publicidad personalizada"
+                  style={{ width: 18, height: 18, cursor: 'pointer' }}
                 />
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 type="button"
                 className="btn-secondary"
-                onClick={handleRejectNonEssential}
+                onClick={() => setShowModal(false)}
+                style={{ width: 'auto', padding: '8px 16px' }}
               >
-                Rechazar Todo
+                Cancelar
               </button>
               <button
                 type="button"
                 className="btn-primary"
                 onClick={handleSaveCustom}
+                style={{ width: 'auto', padding: '8px 20px' }}
               >
                 Guardar Preferencias
               </button>

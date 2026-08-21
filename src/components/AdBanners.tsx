@@ -28,10 +28,13 @@ const AdSingleBox: React.FC<AdBoxProps> = ({
   minHeight = 280,
   className = ''
 }) => {
-  const [canServe, setCanServe] = useState(false);
+  const [canServe, setCanServe] = useState(() => ConsentManager.canServeAnyAds());
 
   useEffect(() => {
-    setCanServe(ConsentManager.canServeAds());
+    setCanServe(ConsentManager.canServeAnyAds());
+    return ConsentManager.subscribe(() => {
+      setCanServe(ConsentManager.canServeAnyAds());
+    });
   }, []);
 
   return (
