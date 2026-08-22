@@ -3,6 +3,7 @@ import { ConsentManager } from '../services/consent';
 
 export const EXCLUDED_AD_ROUTES = [
   '/login',
+  '/profile',
   '/settings',
   '/404',
   '/privacy',
@@ -25,7 +26,7 @@ interface AdBoxProps {
 const AdSingleBox: React.FC<AdBoxProps> = ({
   label,
   sizeLabel,
-  minHeight = 280,
+  minHeight = 100,
   className = ''
 }) => {
   const [canServe, setCanServe] = useState(() => ConsentManager.canServeAnyAds());
@@ -88,66 +89,13 @@ const AdSingleBox: React.FC<AdBoxProps> = ({
   );
 };
 
-export const DesktopSideAd: React.FC<{ side: 'left' | 'right'; currentPath?: string }> = ({
-  side,
-  currentPath = '/'
-}) => {
-  if (!isAdAllowedOnRoute(currentPath)) {
-    return null;
-  }
-
-  return (
-    <aside
-      className={`desktop-side-wing desktop-side-${side}`}
-      role="complementary"
-      aria-label={`Espacios publicitarios laterales ${side === 'left' ? 'izquierdos' : 'derechos'}`}
-    >
-      <div className="desktop-side-sticky">
-        {/* Bloque Superior Lateral */}
-        <AdSingleBox
-          label="Publicidad Lateral Superior"
-          sizeLabel={side === 'left' ? 'Superior Izquierdo' : 'Superior Derecho'}
-          minHeight={360}
-          className="desktop-side-ad-box"
-        />
-
-        {/* Separador entre bloques verticales */}
-        <div style={{ height: 14 }} />
-
-        {/* Bloque Inferior Lateral */}
-        <AdSingleBox
-          label="Publicidad Lateral Inferior"
-          sizeLabel={side === 'left' ? 'Inferior Izquierdo' : 'Inferior Derecho'}
-          minHeight={360}
-          className="desktop-side-ad-box"
-        />
-      </div>
-    </aside>
-  );
+// In Gamesle portal, side wings are kept empty/clean to prioritize platform content over ads
+export const DesktopSideAd: React.FC<{ side: 'left' | 'right'; currentPath?: string }> = () => {
+  return null;
 };
 
-export const TopAd: React.FC<{ currentPath?: string }> = ({ currentPath = '/' }) => {
-  if (!isAdAllowedOnRoute(currentPath)) {
-    return null;
-  }
-
-  return (
-    <aside
-      className="top-ad-banner"
-      role="complementary"
-      aria-label="Espacio publicitario superior"
-      style={{
-        width: '100%',
-        margin: '0 auto 20px auto'
-      }}
-    >
-      <AdSingleBox
-        label="Publicidad"
-        sizeLabel="Banner Superior Adaptable (728x90 / 320x50 Móvil)"
-        minHeight={65}
-      />
-    </aside>
-  );
+export const TopAd: React.FC<{ currentPath?: string }> = () => {
+  return null;
 };
 
 export const BottomAd: React.FC<{ currentPath?: string }> = ({ currentPath = '/' }) => {
@@ -162,13 +110,14 @@ export const BottomAd: React.FC<{ currentPath?: string }> = ({ currentPath = '/'
       aria-label="Espacio publicitario inferior"
       style={{
         width: '100%',
-        margin: '24px auto 0 auto'
+        margin: '32px auto 0 auto',
+        maxWidth: 728
       }}
     >
       <AdSingleBox
         label="Publicidad"
-        sizeLabel="Banner Inferior Adaptable (728x90 / 320x50 Móvil)"
-        minHeight={65}
+        sizeLabel="Banner Inferior (728x90 / 320x50 Móvil)"
+        minHeight={90}
       />
     </aside>
   );

@@ -1,6 +1,16 @@
-# Robots.txt for Gamesle Gaming Hub
+# robots.txt for Gamesle Platform (https://gamesle.onrender.com)
 User-agent: *
 Allow: /
-Disallow: /api/
+Allow: /about
+Allow: /how-it-works
+Allow: /accessibility
+Allow: /privacy
+Allow: /terms
+Allow: /contact
+Disallow: /profile
+Disallow: /login
+
+User-agent: Mediapartners-Google
+Allow: /
 
 Sitemap: https://gamesle.onrender.com/sitemap.xml

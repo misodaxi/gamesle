@@ -1,11 +1,11 @@
 {
-  "name": "Namele",
-  "short_name": "Namele",
-  "description": "El desafío diario de deducción de nombres y países",
+  "name": "Gamesle",
+  "short_name": "Gamesle",
+  "description": "Portal oficial de juegos diarios web de deducción, lógica y conocimiento",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111315",
-  "theme_color": "#5B5CE2",
+  "background_color": "#0B0D14",
+  "theme_color": "#6B72FF",
   "icons": [
     {
       "src": "/favicon.svg",
