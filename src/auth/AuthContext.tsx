@@ -59,6 +59,9 @@ export const resolveTargetUrl = (targetUrl: string = 'https://namele.onrender.co
     if (targetUrl.includes('gamesle.onrender.com')) {
       return 'http://localhost:3000';
     }
+    if (targetUrl.includes('backwardle.onrender.com')) {
+      return 'http://localhost:3003';
+    }
     if (targetUrl.includes('newsle.onrender.com')) {
       return 'http://localhost:3002';
     }

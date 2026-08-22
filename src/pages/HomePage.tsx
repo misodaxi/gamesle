@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Globe2, Newspaper, Gamepad2, ShieldCheck, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Globe2, Newspaper, AudioWaveform, Gamepad2, ShieldCheck, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { CountdownBadge } from '../components/CountdownBadge';
 import { GameCard } from '../components/GameCard';
 import { GameItem } from '../types';
@@ -131,7 +131,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
             </h2>
           </div>
           <p style={{ fontSize: '0.92rem', lineHeight: 1.65, color: 'var(--text-secondary)', margin: '0 0 10px 0' }}>
-            <strong>Gamesle</strong> es un centro de entretenimiento digital enfocado en la creación de pasatiempos diarios inteligentes. A diferencia de los juegos tradicionales, cada título dentro de Gamesle está diseñado alrededor de datos reales verificables: desde la lingüística demográfica mundial en <strong>Namele</strong> hasta la hemeroteca histórica internacional en <strong>Newsle</strong>.
+            <strong>Gamesle</strong> es un centro de entretenimiento digital enfocado en la creación de pasatiempos diarios inteligentes. A diferencia de los juegos tradicionales, cada título dentro de Gamesle está diseñado alrededor de datos reales verificables: desde la lingüística demográfica mundial en <strong>Namele</strong>, la hemeroteca histórica en <strong>Newsle</strong> y la percepción acústica inversa en <strong>Backwardle</strong>.
           </p>
           <p style={{ fontSize: '0.92rem', lineHeight: 1.65, color: 'var(--text-secondary)', margin: 0 }}>
             Todos los juegos comparten un sistema de puntuación continua, desafíos diarios sincronizados a las 00:00 (España) y un modo práctica infinito para entrenar habilidades analíticas y de deducción.
@@ -153,6 +153,22 @@ export const HomePage: React.FC<HomePageProps> = () => {
             </p>
             <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--brand-primary)' }}>
               Metodología: Registros censales (INE, US Census, ONS, INSEE).
+            </div>
+          </div>
+
+                    {/* Card Backwardle */}
+          <div className="featured-card" style={{ borderLeft: '4px solid #7C3AED' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <AudioWaveform size={20} color="#7C3AED" />
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
+                Backwardle: Percepción Acústica
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.88rem', lineHeight: 1.6, color: 'var(--text-secondary)', margin: '0 0 8px 0' }}>
+              Desafía a los jugadores a identificar grabaciones sonoras reales reproducidas en sentido inverso. Con osciloscopio interactivo en tiempo real, control de velocidad de reproducción y pistas progresivas, deberás entrenar tu oído para descifrar sonidos de la vida real.
+            </p>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--brand-primary)' }}>
+              Metodología: Grabaciones acústicas reales y fonoteca internacional de efectos sonoros.
             </div>
           </div>
 
