@@ -580,3 +580,171 @@ body {
   background-color: transparent !important;
   box-shadow: none !important;
 }
+
+
+/* ========================================================================= */
+/* UNIVERSAL RESPONSIVE MOBILE & COMPACT VIEWPORT OPTIMIZATIONS (ALL 4 APPS) */
+/* ========================================================================= */
+html, body {
+  overflow-x: hidden !important;
+  width: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 54px;
+  }
+
+  .site-header {
+    height: 54px !important;
+  }
+
+  .header-content {
+    padding: 0 10px !important;
+  }
+
+  .logo-group span {
+    font-size: 1.1rem !important;
+  }
+
+  .logo-badge {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* Header action buttons on mobile */
+  .header-actions {
+    gap: 4px !important;
+  }
+
+  .header-actions .nav-link-btn {
+    display: none !important; /* Hide text nav links on mobile header to prevent overflowing */
+  }
+
+  .icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+  }
+
+  .icon-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .streak-pill {
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 0.78rem !important;
+    gap: 4px !important;
+  }
+
+  .streak-pill svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Hero & Title scaling on mobile */
+  h1 {
+    font-size: clamp(1.3rem, 5vw, 1.8rem) !important;
+    line-height: 1.25 !important;
+  }
+
+  h2 {
+    font-size: clamp(1.1rem, 4vw, 1.4rem) !important;
+  }
+
+  .hero-section {
+    padding: 16px 10px !important;
+  }
+
+  .hero-tagline {
+    font-size: 0.82rem !important;
+    margin: 6px auto 12px auto !important;
+  }
+
+  /* Countdown Card on Mobile */
+  .countdown-card {
+    padding: 10px 14px !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    margin-bottom: 14px !important;
+  }
+
+  .countdown-digits {
+    font-size: 1.1rem !important;
+    padding: 4px 10px !important;
+  }
+
+  /* Game Grid & Cards */
+  .games-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .game-card {
+    padding: 16px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .featured-card, .content-section {
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Footer Navigation */
+  .site-footer {
+    padding: 24px 12px 36px !important;
+  }
+
+  .footer-inner {
+    max-width: 1000px !important;
+    gap: 12px !important;
+  }
+
+  .footer-nav {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 6px 12px !important;
+    max-width: 100% !important;
+  }
+
+  .footer-nav button, .footer-nav a {
+    font-size: 0.78rem !important;
+    padding: 2px 4px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Responsive Consent Banner on Mobile */
+  aside[aria-label="Aviso de privacidad y consentimiento de cookies"] {
+    bottom: 8px !important;
+    width: calc(100% - 16px) !important;
+    padding: 12px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  aside[aria-label="Aviso de privacidad y consentimiento de cookies"] > div {
+    gap: 10px !important;
+  }
+
+  aside[aria-label="Aviso de privacidad y consentimiento de cookies"] .btn-secondary,
+  aside[aria-label="Aviso de privacidad y consentimiento de cookies"] .btn-primary {
+    padding: 6px 12px !important;
+    font-size: 0.76rem !important;
+    min-height: 32px !important;
+  }
+
+  aside[aria-label="Aviso de privacidad y consentimiento de cookies"] > div > div:last-child {
+    padding-left: 0 !important;
+    justify-content: flex-end !important;
+  }
+}

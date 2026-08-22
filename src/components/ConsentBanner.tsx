@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Settings, X, Check } from 'lucide-react';
+import { ShieldCheck, Settings, Check, X } from 'lucide-react';
 import { ConsentManager, ConsentPreferences } from '../services/consent';
 
 interface ConsentBannerProps {
@@ -7,124 +7,146 @@ interface ConsentBannerProps {
 }
 
 export const ConsentBanner: React.FC<ConsentBannerProps> = ({ onNavigate }) => {
-  const [isVisible, setIsVisible] = useState<boolean>(() => !ConsentManager.hasAnswered());
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [consentState, setConsentState] = useState<ConsentPreferences>(() => ConsentManager.getConsent());
+  const [showBanner, setShowBanner] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [consentState, setConsentState] = useState<ConsentPreferences>(ConsentManager.getConsent());
 
   useEffect(() => {
-    return ConsentManager.subscribe((newConsent) => {
+    if (!ConsentManager.hasAnswered()) {
+      setShowBanner(true);
+    }
+
+    const unsubscribe = ConsentManager.subscribe((newConsent) => {
       setConsentState(newConsent);
-      setIsVisible(newConsent.status === 'undecided');
+      if (newConsent.status !== 'undecided') {
+        setShowBanner(false);
+      }
     });
+
+    return unsubscribe;
   }, []);
 
   const handleAcceptAll = () => {
     ConsentManager.acceptAll();
-    setIsVisible(false);
+    setShowBanner(false);
     setShowModal(false);
   };
 
   const handleRejectNonEssential = () => {
     ConsentManager.rejectNonEssential();
-    setIsVisible(false);
+    setShowBanner(false);
     setShowModal(false);
   };
 
-  const handleSaveCustom = (analytics: boolean, personalizedAds: boolean) => {
+  const handleSaveCustom = (analytics: boolean, marketing: boolean) => {
     ConsentManager.setConsent({
       status: 'custom',
       essential: true,
       analytics,
-      personalizedAds,
+      personalizedAds: marketing,
       nonPersonalizedAds: true,
       updatedAt: new Date().toISOString()
     });
-    setIsVisible(false);
+    setShowBanner(false);
     setShowModal(false);
   };
 
-  if (!isVisible && !showModal) return null;
+  if (!showBanner && !showModal) {
+    return null;
+  }
 
   return (
     <>
-      {/* Banner inferior horizontal fijo (Exact matching design) */}
-      {isVisible && !showModal && (
+      {/* Banner Flotante Inferior RGPD / ePrivacy (Diseño Exacto Homologado) */}
+      {showBanner && !showModal && (
         <aside
           role="region"
-          aria-label="Aviso de privacidad y cookies"
+          aria-label="Aviso de privacidad y consentimiento de cookies"
           style={{
             position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: 'rgba(13, 15, 20, 0.96)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            borderTop: '1px solid rgba(91, 92, 226, 0.35)',
-            boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.45)',
-            padding: '14px 24px',
-            zIndex: 10000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 'calc(100% - 24px)',
+            maxWidth: 720,
+            zIndex: 9999,
+            backgroundColor: 'rgba(20, 24, 38, 0.96)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 20,
+            padding: '18px 22px',
+            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            animation: 'fadeIn 0.25s ease-out'
           }}
         >
-          <div
-            style={{
-              maxWidth: 1280,
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 24,
-              flexWrap: 'wrap'
-            }}
-          >
-            <div style={{ flex: '1 1 340px', minWidth: 280 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '0.92rem', marginBottom: 4, color: 'var(--text-primary)' }}>
-                <ShieldCheck size={18} color="var(--brand-primary)" />
-                Tu Privacidad en Gamesle
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Top row: Icon + Text */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2
+                }}
+              >
+                <ShieldCheck size={22} color="#6366F1" />
               </div>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: 0 }}>
-                Utilizamos almacenamiento local y cookies técnicas para guardar tu sesión y preferencias. Si lo autorizas, también empleamos cookies para métricas y publicidad personalizada de Google AdSense acorde al RGPD. Consulta nuestra{' '}
-                <button
-                  type="button"
-                  onClick={() => onNavigate('/privacy')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--brand-primary)',
-                    textDecoration: 'underline',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    padding: 0,
-                    fontSize: '0.82rem',
-                    fontFamily: 'inherit'
-                  }}
-                >
-                  Política de Privacidad
-                </button>
-                .
-              </p>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.92rem', marginBottom: 3 }}>
+                  Respetamos tu Privacidad y Preferencias de Cookies
+                </div>
+                <p style={{ fontSize: '0.8rem', lineHeight: 1.45, color: '#94A3B8', margin: 0 }}>
+                  Utilizamos cookies técnicas necesarias para el juego diario y servicios publicitarios de Google AdSense para sostener la plataforma de forma 100% gratuita. Consulta nuestra{' '}
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('/privacy')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#6366F1',
+                      textDecoration: 'underline',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: 0,
+                      fontSize: '0.8rem',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    Política de Privacidad
+                  </button>
+                  .
+                </p>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {/* Bottom row: Action Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-start', paddingLeft: 54 }}>
               <button
                 type="button"
                 className="btn-secondary"
                 onClick={() => setShowModal(true)}
                 style={{
-                  width: 'auto',
-                  padding: '9px 18px',
-                  fontSize: '0.84rem',
+                  borderRadius: 9999,
+                  padding: '7px 16px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  minHeight: 36,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  borderRadius: 'var(--radius-full)',
-                  minHeight: 38
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#F1F5F9'
                 }}
               >
-                <Settings size={14} /> Configurar
+                <Settings size={13} /> Configurar
               </button>
 
               <button
@@ -132,11 +154,14 @@ export const ConsentBanner: React.FC<ConsentBannerProps> = ({ onNavigate }) => {
                 className="btn-secondary"
                 onClick={handleRejectNonEssential}
                 style={{
-                  width: 'auto',
-                  padding: '9px 18px',
-                  fontSize: '0.84rem',
-                  borderRadius: 'var(--radius-full)',
-                  minHeight: 38
+                  borderRadius: 9999,
+                  padding: '7px 16px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  minHeight: 36,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#F1F5F9'
                 }}
               >
                 Solo Necesarias
@@ -147,17 +172,20 @@ export const ConsentBanner: React.FC<ConsentBannerProps> = ({ onNavigate }) => {
                 className="btn-primary"
                 onClick={handleAcceptAll}
                 style={{
-                  width: 'auto',
-                  padding: '9px 22px',
-                  fontSize: '0.84rem',
+                  borderRadius: 9999,
+                  padding: '7px 20px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  minHeight: 36,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  borderRadius: 'var(--radius-full)',
-                  minHeight: 38
+                  background: 'linear-gradient(135deg, #5B5CE2, #7C3AED)',
+                  border: 'none',
+                  color: '#FFFFFF'
                 }}
               >
-                <Check size={15} /> Aceptar Todas
+                <Check size={14} /> Aceptar Todas
               </button>
             </div>
           </div>
@@ -175,7 +203,7 @@ export const ConsentBanner: React.FC<ConsentBannerProps> = ({ onNavigate }) => {
         >
           <div
             className="modal-content"
-            style={{ maxWidth: 520, textAlign: 'left' }}
+            style={{ maxWidth: 520, textAlign: 'left', width: '100%' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
