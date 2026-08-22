@@ -35,10 +35,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <Gamepad2 size={18} color="var(--brand-primary)" /> 2. El Ecosistema de Juegos Gamesle
           </h2>
           <p>
-            El primer juego insignia de la plataforma es <strong>Namele</strong>, un reto diario en el que debes deducir la procedencia geográfica de 10 nombres en un mapa interactivo mundial, compitiendo en un ranking global diario.
+            El catálogo de <strong>Gamesle</strong> integra desafíos diarios originales como <strong>Namele</strong> (deducción geográfica y onomástica en mapa interactivo mundial) y <strong>Newsle</strong> (deducción histórica y cronológica a partir de noticias de hemeroteca).
           </p>
           <p style={{ marginTop: 8 }}>
-            Estamos desarrollando continuamente nuevos títulos para el catálogo, incluyendo juegos de banderas (<em>Flaggle</em>), comparativas demográficas (<em>Popule</em>) y líneas temporales históricas (<em>Chronole</em>).
+            Estamos en constante desarrollo de nuevos títulos y formatos diarios para enriquecer la plataforma con experiencias educativas, accesibles y lúdicas.
           </p>
         </section>
 

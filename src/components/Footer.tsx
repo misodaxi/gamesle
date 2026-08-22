@@ -14,14 +14,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <button type="button" onClick={() => onNavigate('/')}>
             Catálogo de Juegos
           </button>
-          <a
-            href="https://namele.onrender.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontWeight: 700, color: 'var(--brand-primary)' }}
-          >
-            Namele (Juego en Vivo)
-          </a>
           <button type="button" onClick={() => onNavigate('/how-it-works')}>
             Cómo Funciona
           </button>
