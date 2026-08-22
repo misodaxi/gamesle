@@ -10,6 +10,20 @@ interface HomePageProps {
 
 const ASSOCIATED_GAMES: GameItem[] = [
   {
+    id: 'backwardle',
+    title: 'Backwardle',
+    slug: 'backwardle',
+    tagline: 'Adivina los Sonidos Reproducidos al Revés',
+    description: '10 grabaciones sonoras reales reproducidas en sentido inverso. Pon a prueba tu agudeza auditiva con osciloscopio interactivo, control de velocidad y 3 pistas progresivas.',
+    category: 'Sonido',
+    status: 'live',
+    url: 'https://backwardle.onrender.com',
+    badge: '⭐ Nuevo Juego Oficial',
+    iconName: 'audio',
+    features: ['10 Sonidos diarios al revés', 'Reproductor con osciloscopio interactivo', 'Pistas de fragmento normal y categoría'],
+    gradient: 'linear-gradient(135deg, #5B5CE2, #7C3AED)'
+  },
+  {
     id: 'newsle',
     title: 'Newsle',
     slug: 'newsle',
@@ -90,7 +104,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
             🎮 Juegos Oficiales en Vivo
           </h2>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>2 Juegos Disponibles</span>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>3 Juegos Disponibles</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>

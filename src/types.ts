@@ -6,7 +6,7 @@ export interface GameItem {
   slug: string;
   tagline: string;
   description: string;
-  category: 'Geografía' | 'Cultura' | 'Lógica' | 'Historia' | 'Palabras';
+  category: 'Geografía' | 'Cultura' | 'Lógica' | 'Historia' | 'Palabras' | 'Sonido';
   status: 'live' | 'upcoming' | 'beta';
   url: string;
   badge?: string;

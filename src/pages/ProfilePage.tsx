@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Trash2, Edit2, Check, ArrowLeft, Gamepad2, ArrowRight } from 'lucide-react';
+import { User, LogOut, Trash2, Edit2, Check, ArrowLeft, Gamepad2, ArrowRight, Globe2, Newspaper, AudioWaveform } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
 export const ProfilePage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
@@ -13,6 +13,30 @@ export const ProfilePage: React.FC<{ onNavigate: (path: string) => void }> = ({ 
       setIsEditingName(false);
     }
   };
+
+  const games = [
+    {
+      id: 'backwardle',
+      title: 'Backwardle',
+      description: 'Adivina los Sonidos Reproducidos al Revés • Reto Diario Sincronizado',
+      url: 'https://backwardle.onrender.com',
+      icon: AudioWaveform
+    },
+    {
+      id: 'newsle',
+      title: 'Newsle',
+      description: 'Adivina la Fecha a Partir de las Noticias • Reto Diario Sincronizado',
+      url: 'https://newsle.onrender.com',
+      icon: Newspaper
+    },
+    {
+      id: 'namele',
+      title: 'Namele',
+      description: 'Deducción Geográfica en Mapa Mundial • Reto Diario Sincronizado',
+      url: 'https://namele.onrender.com',
+      icon: Globe2
+    }
+  ];
 
   return (
     <div className="center-column" style={{ maxWidth: 640 }}>
@@ -204,39 +228,63 @@ export const ProfilePage: React.FC<{ onNavigate: (path: string) => void }> = ({ 
       </div>
 
       {/* Associated Games Hub */}
-      <h2 style={{ fontSize: '1.15rem', marginBottom: 12, alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <h2 style={{ fontSize: '1.15rem', marginBottom: 14, alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
         <Gamepad2 size={18} color="var(--brand-primary)" /> Juegos Asociados y Disponibles
       </h2>
 
-      <div
-        style={{
-          width: '100%',
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-md)',
-          padding: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12
-        }}
-      >
-        <div>
-          <strong style={{ fontSize: '0.95rem' }}>Namele</strong>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            Deducción Geográfica en Mapa Mundial • Reto Diario Sincronizado
-          </p>
-        </div>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {games.map((g) => {
+          const IconComp = g.icon;
+          return (
+            <div
+              key={g.id}
+              style={{
+                width: '100%',
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-md)',
+                padding: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    backgroundColor: 'var(--brand-soft)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}
+                >
+                  <IconComp size={20} color="var(--brand-primary)" />
+                </div>
+                <div>
+                  <strong style={{ fontSize: '0.95rem' }}>{g.title}</strong>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                    {g.description}
+                  </p>
+                </div>
+              </div>
 
-        <a
-          href={getGameLaunchUrl('https://namele.onrender.com')}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary"
-          style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: 36 }}
-        >
-          Jugar <ArrowRight size={14} />
-        </a>
+              <a
+                href={getGameLaunchUrl(g.url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary"
+                style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: 36, whiteSpace: 'nowrap' }}
+              >
+                Jugar <ArrowRight size={14} />
+              </a>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

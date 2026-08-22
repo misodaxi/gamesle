@@ -1,27 +1,25 @@
 @echo off
-title Namele - Servidor Local
+cd /d "%~dp0"
+title Gamesle - Servidor Local
 echo ========================================================
-echo        Iniciando Namele en tu navegador local
+echo        Iniciando Gamesle en tu navegador local
 echo ========================================================
 echo.
 
-set "PATH=%LOCALAPPDATA%\nodejs;%PATH%"
+set "PATH=%LOCALAPPDATA%\nodejs;%ProgramFiles%\nodejs;%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
 
 where node >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] No se encontro Node.js en el sistema.
-    echo Asegurate de que Node.js esta instalado en %LOCALAPPDATA%\nodejs
+    echo Asegurate de que Node.js esta instalado.
     pause
     exit /b 1
 )
 
 echo [OK] Node.js detectado correctamente.
-echo [INFO] Iniciando servidor de desarrollo Vite...
-echo.
-echo La aplicacion estara disponible en: http://localhost:3000
+echo [INFO] Iniciando servidor Vite y abriendo el navegador...
 echo.
 
-start http://localhost:3000
-call npm run dev -- --open --port 3000
+call npm run dev -- --open
 
 pause
